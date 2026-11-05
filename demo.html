@@ -3,205 +3,470 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>CHỢ ONLINE 24H</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#a8cb83;overflow:hidden}
-header{height:58px;background:#70452d;color:white;display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+body{margin:0;font-family:Arial;background:#9dbd83;overflow:hidden}
+header{height:58px;background:#70452d;color:white;display:flex;
+align-items:center;justify-content:space-between;padding:0 14px}
 .brand{font-weight:bold;font-size:18px}
-button{border:0;border-radius:20px;padding:10px 14px;background:#f5d58c;color:#55351f;font-weight:bold}
+button{border:0;border-radius:18px;padding:10px 14px;font-weight:bold}
 #game{height:calc(100dvh - 58px);overflow:hidden;touch-action:none}
-svg{width:100%;height:100%;display:block}
-.grass{fill:#a9ce83}
-.path{fill:#d9c49a;stroke:#b49a6d;stroke-width:5}
-.shopbody{fill:#e9c58b;stroke:#805438;stroke-width:4}
-.roof{fill:#a94e39;stroke:#713a2d;stroke-width:5}
-.sign{fill:#f8df9c;stroke:#805438;stroke-width:3}
-.shoptext{font-size:15px;font-weight:bold;fill:#573a25;text-anchor:middle}
-.tree{fill:#4f914b;stroke:#39723b;stroke-width:4}
-.trunk{fill:#805438}
-.lamp{fill:#ffed9b;stroke:#9b6639;stroke-width:4}
+canvas{display:block;width:100%;height:100%}
+.hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+background:#fffde5e8;color:#59402d;padding:10px 15px;
+border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
 </style>
 </head>
 <body>
 <header>
 <div class="brand">🏮 CHỢ ONLINE 24H</div>
-<button id="dayBtn">🌙 Ban đêm</button>
+<button onclick="toggleNight()">🌞 / 🌙</button>
 </header>
-
 <div id="game">
-<svg id="world" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
-<g id="scene">
-<rect x="-1000" y="-1000" width="3000" height="3000" class="grass"/>
-
-<!-- Đường đi -->
-<path class="path" d="M500 40 L880 290 L880 530 L500 770 L120 530 L120 290 Z"/>
-
-<!-- Quảng trường -->
-<ellipse cx="500" cy="410" rx="225" ry="155" fill="#b99a70" stroke="#806b50" stroke-width="9"/>
-<ellipse cx="500" cy="410" rx="195" ry="128" fill="#e8d5ae" stroke="#c0a77c" stroke-width="5"/>
-<ellipse cx="500" cy="410" rx="145" ry="90" fill="#d9c49a" stroke="#b49a6d" stroke-width="3"/>
-<text x="500" y="400" text-anchor="middle" font-size="30" font-weight="bold" fill="#775333">CHỢ ONLINE</text>
-<text x="500" y="435" text-anchor="middle" font-size="25" fill="#775333">24H</text>
-
-<!-- 12 sạp hàng -->
-<g id="shops"></g>
-
-<!-- Cây và đèn -->
-<g id="decor"></g>
-
-<!-- Khách tham quan -->
-<g id="people"></g>
-
-<!-- Nhân vật của bạn -->
-<g id="player" transform="translate(500 470)">
-<ellipse cx="0" cy="18" rx="17" ry="7" fill="#64784c" opacity=".4"/>
-<circle cx="0" cy="0" r="15" fill="#f1bd91" stroke="#754d37" stroke-width="3"/>
-<path d="M-14 -5 Q0 -25 14 -5" fill="#4c3025"/>
-<circle cx="-5" cy="1" r="2" fill="#35271f"/>
-<circle cx="5" cy="1" r="2" fill="#35271f"/>
-<path d="M-5 8 Q0 12 5 8" fill="none" stroke="#a64e43" stroke-width="2"/>
-<path d="M-12 17 L12 17 L15 38 L-15 38 Z" fill="#4e8bc1" stroke="#345c7b" stroke-width="3"/>
-<text x="0" y="55" text-anchor="middle" font-size="12" fill="#493626">Bạn</text>
-</g>
-</g>
-
-<!-- Lớp ban đêm -->
-<g id="nightLayer" opacity="0">
-<rect x="-1000" y="-1000" width="3000" height="3000" fill="#152344" opacity=".48"/>
-</g>
-</svg>
+<canvas id="world"></canvas>
+<div class="hint">👆 Chạm để di chuyển • Kéo để khám phá chợ</div>
 </div>
-
 <script>
-const ns="http://www.w3.org/2000/svg";
-const shops=document.getElementById("shops");
-const decor=document.getElementById("decor");
-const people=document.getElementById("people");
+const canvas=document.getElementById("world");
+const ctx=canvas.getContext("2d");
 
-function add(tag,attrs,parent){
-const e=document.createElementNS(ns,tag);
-Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
-parent.appendChild(e);
-return e;
+let W,H,dpr=1;
+let camX=0,camY=0,zoom=1;
+let night=false;
+let lastTime=0;
+let dragging=false,moved=false;
+let startX=0,startY=0,oldX=0,oldY=0;
+
+const shops=[];
+const trees=[];
+const flowers=[];
+const lamps=[];
+const obstacles=[];
+
+const player={x:900,y:690,path:[],speed:145,frame:0};
+
+function resize(){
+ W=canvas.clientWidth;H=canvas.clientHeight;
+ dpr=Math.min(devicePixelRatio||1,2);
+ canvas.width=W*dpr;canvas.height=H*dpr;
+ camX=W/2-900;
+ camY=H/2-680;
 }
+window.addEventListener("resize",resize);
+resize();
 
+// 12 SẠP HÀNG
 const positions=[
-[250,150],[500,100],[750,150],
-[180,300],[820,300],
-[180,540],[820,540],
-[250,670],[500,710],[750,670],
-[365,100],[635,100]
+[450,250],[700,250],[950,250],[1200,250],
+[450,1050],[700,1050],[950,1050],[1200,1050],
+[300,450],[300,750],[1350,450],[1350,750]
 ];
 
 const names=[
-"Nông sản","Ẩm thực","Trái cây","Thời trang",
-"Gia dụng","Hoa tươi","Đặc sản","Đồ uống",
-"Thủ công","Mỹ phẩm","Đồ chơi","Tạp hóa"
+"Rau củ quả","Trái cây","Thịt cá","Hải sản",
+"Đồ gia dụng","Thời trang","Đặc sản","Ăn uống",
+"Hoa tươi","Tạp hóa","Bánh ngọt","Nước uống"
 ];
 
 positions.forEach((p,i)=>{
-const g=add("g",{transform:`translate(${p[0]} ${p[1]})`},shops);
-
-add("ellipse",{cx:0,cy:48,rx:58,ry:15,fill:"#688653",opacity:".35"},g);
-add("rect",{x:-48,y:-8,width:96,height:58,rx:5,class:"shopbody"},g);
-add("polygon",{points:"-58,-10 0,-48 58,-10 0,8",class:"roof"},g);
-add("polygon",{points:"-58,-10 0,8 0,18 -58,0",fill:"#873e30"},g);
-add("polygon",{points:"58,-10 0,8 0,18 58,0",fill:"#71382d"},g);
-add("rect",{x:-36,y:2,width:72,height:20,rx:4,class:"sign"},g);
-
-const t=add("text",{x:0,y:17,class:"shoptext"},g);
-t.textContent=names[i];
-
-add("rect",{x:-15,y:28,width:30,height:22,fill:"#805438"},g);
-add("rect",{x:-40,y:27,width:15,height:14,fill:"#9bc6d3",stroke:"#805438","stroke-width":2},g);
+ shops.push({x:p[0],y:p[1],name:names[i],id:i+1});
+ obstacles.push({
+  x:p[0]-65,y:p[1]-48,w:130,h:105
+ });
 });
 
-// Cây xanh
-[[90,170],[910,170],[90,620],[910,620],
-[350,740],[650,740],[110,400],[890,400],
-[350,45],[650,45]].forEach(p=>{
-const g=add("g",{transform:`translate(${p[0]} ${p[1]})`},decor);
-add("rect",{x:-5,y:0,width:10,height:30,class:"trunk"},g);
-add("circle",{cx:0,cy:-5,r:25,class:"tree"},g);
-add("circle",{cx:-12,cy:-13,r:12,fill:"#70ad5b"},g);
-});
-
-// Đèn lồng
-[[350,285],[650,285],[350,550],[650,550]].forEach(p=>{
-const g=add("g",{transform:`translate(${p[0]} ${p[1]})`},decor);
-add("rect",{x:-3,y:0,width:6,height:30,fill:"#795638"},g);
-add("path",{d:"M-13 0 L0 -16 L13 0 Z",fill:"#a66d3b"},g);
-add("circle",{cx:0,cy:-8,r:7,class:"lamp"},g);
-});
-
-// Nhân vật trong chợ
-[[410,330],[590,330],[400,490],[600,480],[470,560],[540,560]].forEach((p,i)=>{
-const g=add("g",{transform:`translate(${p[0]} ${p[1]})`},people);
-add("ellipse",{cx:0,cy:17,rx:11,ry:5,fill:"#657b50",opacity:".4"},g);
-add("circle",{cx:0,cy:0,r:10,fill:"#f1c39c",stroke:"#79543d","stroke-width":2},g);
-add("path",{d:"M-10 -3 Q0 -18 10 -3",fill:"#47352a"},g);
-add("path",{d:"M-9 11 L9 11 L12 29 L-12 29 Z",fill:["#d36c5c","#68a0c9","#e2b94f"][i%3]},g);
-});
-
-// Di chuyển nhân vật
-const world=document.getElementById("world");
-const scene=document.getElementById("scene");
-const player=document.getElementById("player");
-let playerX=500,playerY=470;
-let start=null,offsetX=0,offsetY=0,dragged=false;
-
-function getPoint(e){
-const r=world.getBoundingClientRect();
-return {
-x:(e.clientX-r.left)*1000/r.width,
-y:(e.clientY-r.top)*800/r.height
-};
+// CÂY XANH
+for(let y=120;y<1250;y+=145){
+ for(let x=100;x<1700;x+=180){
+  if(Math.abs(x-900)>170 || Math.abs(y-680)>160){
+   trees.push({x:x+Math.random()*35,y:y+Math.random()*35});
+  }
+ }
 }
 
-world.addEventListener("pointerdown",e=>{
-const p=getPoint(e);
-start={x:e.clientX,y:e.clientY,px:p.x,py:p.y,ox:offsetX,oy:offsetY};
-dragged=false;
-world.setPointerCapture(e.pointerId);
-});
-
-world.addEventListener("pointermove",e=>{
-if(!start)return;
-const dx=e.clientX-start.x;
-const dy=e.clientY-start.y;
-
-if(Math.abs(dx)+Math.abs(dy)>8)dragged=true;
-
-if(dragged){
-offsetX=start.ox+dx*1000/world.clientWidth;
-offsetY=start.oy+dy*800/world.clientHeight;
-scene.setAttribute("transform",`translate(${offsetX} ${offsetY})`);
+// HOA
+for(let i=0;i<100;i++){
+ flowers.push({
+  x:150+Math.random()*1500,
+  y:120+Math.random()*1100,
+  c:["#ff8ca7","#ffe27a","#c9a4ef","#ffffff"][i%4]
+ });
 }
-});
 
-world.addEventListener("pointerup",e=>{
-if(!start)return;
-
-if(!dragged){
-const p=getPoint(e);
-playerX=p.x-offsetX;
-playerY=p.y-offsetY;
-player.setAttribute("transform",`translate(${playerX} ${playerY})`);
+// ĐÈN LỒNG
+for(let x=250;x<1600;x+=260){
+ lamps.push({x,y:180});
+ lamps.push({x,y:1170});
 }
-start=null;
+
+function isoTile(x,y,size,color){
+ ctx.fillStyle=color;
+ ctx.beginPath();
+ ctx.moveTo(x,y-size*.45);
+ ctx.lineTo(x+size,y);
+ ctx.lineTo(x,y+size*.45);
+ ctx.lineTo(x-size,y);
+ ctx.closePath();
+ ctx.fill();
+}
+
+function ground(){
+ ctx.fillStyle=night?"#344c3b":"#91bd7b";
+ ctx.fillRect(0,0,1800,1400);
+
+ // Đường lát đá
+ for(let y=100;y<1400;y+=65){
+  for(let x=100;x<1800;x+=90){
+   isoTile(x,y,43,
+    ((x+y)%3===0)?"#d5c59b":"#c6b58b");
+  }
+ }
+
+ // Đường chính
+ ctx.fillStyle="#c4ad7f";
+ ctx.beginPath();
+ ctx.moveTo(820,80);ctx.lineTo(980,80);
+ ctx.lineTo(980,1300);ctx.lineTo(820,1300);
+ ctx.fill();
+
+ // Quảng trường
+ ctx.fillStyle="#e1cda0";
+ ctx.beginPath();
+ ctx.ellipse(900,680,240,145,0,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.strokeStyle="#aa8859";
+ ctx.lineWidth=7;
+ ctx.stroke();
+
+ // Đài phun nước
+ ctx.fillStyle="#a98a63";
+ ctx.beginPath();
+ ctx.ellipse(900,680,75,45,0,0,Math.PI*2);
+ ctx.fill();
+ ctx.fillStyle="#70c9d2";
+ ctx.beginPath();
+ ctx.ellipse(900,680,57,32,0,0,Math.PI*2);
+ ctx.fill();
+ ctx.fillStyle="#d9f5f3";
+ ctx.beginPath();
+ ctx.arc(900,660,8,0,Math.PI*2);
+ ctx.fill();
+}
+
+function tree(x,y){
+ ctx.fillStyle="#65452b";
+ ctx.fillRect(x-5,y-15,10,35);
+
+ ctx.fillStyle="#3f7945";
+ ctx.beginPath();
+ ctx.arc(x,y-30,27,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.fillStyle="#67a75b";
+ ctx.beginPath();
+ ctx.arc(x-13,y-42,17,0,Math.PI*2);
+ ctx.arc(x+13,y-39,17,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.fillStyle="#9ccf72";
+ ctx.beginPath();
+ ctx.arc(x-8,y-48,7,0,Math.PI*2);
+ ctx.fill();
+}
+
+function shop(s){
+ const x=s.x,y=s.y;
+
+ // Bóng sạp
+ ctx.fillStyle="#00000022";
+ ctx.fillRect(x-65,y-3,135,15);
+
+ // Thân sạp
+ ctx.fillStyle="#a66c40";
+ ctx.fillRect(x-57,y-58,114,70);
+
+ ctx.strokeStyle="#74472c";
+ ctx.lineWidth=4;
+ ctx.strokeRect(x-57,y-58,114,70);
+
+ // Mái ngói
+ ctx.fillStyle="#9d4937";
+ ctx.beginPath();
+ ctx.moveTo(x-75,y-58);
+ ctx.lineTo(x,y-108);
+ ctx.lineTo(x+75,y-58);
+ ctx.closePath();
+ ctx.fill();
+
+ ctx.strokeStyle="#713b30";
+ ctx.lineWidth=4;
+ ctx.stroke();
+
+ // Viền mái
+ ctx.fillStyle="#c86c4c";
+ ctx.fillRect(x-73,y-61,146,9);
+
+ // Cửa sạp
+ ctx.fillStyle="#f0d19a";
+ ctx.fillRect(x-38,y-48,76,36);
+
+ // Bảng hiệu
+ ctx.fillStyle="#70452d";
+ ctx.fillRect(x-56,y-91,112,23);
+
+ ctx.fillStyle="#fff2c4";
+ ctx.font="bold 11px Arial";
+ ctx.textAlign="center";
+ ctx.fillText(s.name,x,y-76);
+
+ // Số sạp
+ ctx.fillStyle="#fff";
+ ctx.font="10px Arial";
+ ctx.fillText("SẠP "+s.id,x,y+25);
+}
+
+function flower(f){
+ ctx.fillStyle=f.c;
+ ctx.beginPath();
+ ctx.arc(f.x,f.y,4,0,Math.PI*2);
+ ctx.fill();
+}
+
+function lamp(l){
+ ctx.fillStyle="#65462d";
+ ctx.fillRect(l.x-3,l.y-3,6,42);
+ ctx.fillStyle=night?"#fff2a2":"#ffdc8c";
+ ctx.beginPath();
+ ctx.arc(l.x,l.y-8,12,0,Math.PI*2);
+ ctx.fill();
+ if(night){
+  ctx.fillStyle="#ffedaa22";
+  ctx.beginPath();
+  ctx.arc(l.x,l.y-8,28,0,Math.PI*2);
+  ctx.fill();
+ }
+}
+
+function avatar(){
+ const x=player.x,y=player.y;
+ const walking=player.path.length>0;
+ const bounce=walking?Math.sin(player.frame*12)*3:0;
+
+ ctx.fillStyle="#00000033";
+ ctx.beginPath();
+ ctx.ellipse(x,y+12,15,7,0,0,Math.PI*2);
+ ctx.fill();
+
+ // Chân
+ ctx.fillStyle="#343c54";
+ ctx.fillRect(x-9,y-5+bounce,7,16);
+ ctx.fillRect(x+3,y-5-bounce,7,16);
+
+ // Thân
+ ctx.fillStyle="#e7a34c";
+ ctx.beginPath();
+ ctx.roundRect(x-12,y-24+bounce,24,23,7);
+ ctx.fill();
+
+ // Đầu
+ ctx.fillStyle="#f1c59b";
+ ctx.beginPath();
+ ctx.arc(x,y-32+bounce,12,0,Math.PI*2);
+ ctx.fill();
+
+ // Tóc
+ ctx.fillStyle="#49342a";
+ ctx.beginPath();
+ ctx.arc(x,y-37+bounce,12,Math.PI,Math.PI*2);
+ ctx.fill();
+
+ // Tên nhân vật
+ ctx.fillStyle="#fff";
+ ctx.font="bold 11px Arial";
+ ctx.textAlign="center";
+ ctx.fillText("Bạn",x,y-52+bounce);
+}
+
+// TÌM ĐƯỜNG A*
+function blocked(x,y){
+ if(x<45||x>1755||y<45||y>1355)return true;
+ return obstacles.some(o=>
+  x>o.x-12&&x<o.x+o.w+12&&
+  y>o.y-12&&y<o.y+o.h+12
+ );
+}
+
+function findPath(sx,sy,tx,ty){
+ const size=30;
+ const gx=Math.round(tx/size);
+ const gy=Math.round(ty/size);
+ const sxg=Math.round(sx/size);
+ const syg=Math.round(sy/size);
+
+ const key=(x,y)=>x+","+y;
+ const open=[{x:sxg,y:syg,g:0,f:0}];
+ const came=new Map();
+ const costs=new Map([[key(sxg,syg),0]]);
+ const closed=new Set();
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1],
+ [1,1],[1,-1],[-1,1],[-1,-1]];
+
+ let found=null,steps=0;
+
+ while(open.length&&steps++<4500){
+  open.sort((a,b)=>a.f-b.f);
+  const cur=open.shift();
+  const k=key(cur.x,cur.y);
+  if(closed.has(k))continue;
+  closed.add(k);
+
+  if(Math.abs(cur.x-gx)+Math.abs(cur.y-gy)<2){
+   found=cur;break;
+  }
+
+  for(const [dx,dy] of dirs){
+   const nx=cur.x+dx,ny=cur.y+dy;
+   const nk=key(nx,ny);
+   if(closed.has(nk)||blocked(nx*size,ny*size))continue;
+
+   const ng=cur.g+(dx&&dy?1.414:1);
+   if(ng<(costs.get(nk)??Infinity)){
+    costs.set(nk,ng);
+    came.set(nk,k);
+    open.push({
+     x:nx,y:ny,g:ng,
+     f:ng+Math.hypot(gx-nx,gy-ny)
+    });
+   }
+  }
+ }
+
+ if(!found)return [];
+ const path=[];
+ let k=key(found.x,found.y);
+ while(k){
+  const [x,y]=k.split(",").map(Number);
+  path.unshift({x:x*size,y:y*size});
+  k=came.get(k);
+ }
+ return path;
+}
+
+function movePlayer(dt){
+ if(!player.path.length)return;
+ const target=player.path[0];
+ const dx=target.x-player.x;
+ const dy=target.y-player.y;
+ const d=Math.hypot(dx,dy);
+ if(d<5){player.path.shift();return}
+ const step=Math.min(d,player.speed*dt);
+ player.x+=dx/d*step;
+ player.y+=dy/d*step;
+ player.frame+=dt;
+}
+
+function draw(){
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.clearRect(0,0,W,H);
+
+ ctx.save();
+ ctx.translate(camX,camY);
+ ctx.scale(zoom,zoom);
+
+ ground();
+
+ trees.forEach(t=>tree(t.x,t.y));
+
+ flowers.forEach(f=>flower(f));
+
+ lamps.forEach(l=>lamp(l));
+
+ shops.forEach(s=>shop(s));
+
+ // Đường đi của nhân vật
+ if(player.path.length){
+  ctx.strokeStyle="#fff4a5";
+  ctx.lineWidth=3;
+  ctx.setLineDash([8,7]);
+  ctx.beginPath();
+  ctx.moveTo(player.x,player.y);
+  player.path.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.stroke();
+  ctx.setLineDash([]);
+ }
+
+ avatar();
+
+ ctx.restore();
+
+ // Ban đêm
+ if(night){
+  ctx.fillStyle="#10213b66";
+  ctx.fillRect(0,0,W,H);
+ }
+}
+
+function loop(time){
+ const dt=Math.min((time-lastTime)/1000,.04);
+ lastTime=time;
+ movePlayer(dt);
+ draw();
+ requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ĐIỀU KHIỂN CẢM ỨNG
+function worldPoint(e){
+ return {
+  x:(e.clientX-camX)/zoom,
+  y:(e.clientY-camY)/zoom
+ };
+}
+
+canvas.addEventListener("pointerdown",e=>{
+ dragging=true;moved=false;
+ startX=e.clientX;startY=e.clientY;
+ oldX=camX;oldY=camY;
+ canvas.setPointerCapture(e.pointerId);
 });
 
-world.addEventListener("pointercancel",()=>{start=null});
+canvas.addEventListener("pointermove",e=>{
+ if(!dragging)return;
+ const dx=e.clientX-startX;
+ const dy=e.clientY-startY;
+ if(Math.hypot(dx,dy)>7)moved=true;
+ if(moved){
+  camX=oldX+dx;
+  camY=oldY+dy;
+ }
+});
 
-// Chuyển ngày và đêm
-let night=false;
-document.getElementById("dayBtn").onclick=()=>{
-night=!night;
-document.getElementById("nightLayer").setAttribute("opacity",night?"1":"0");
-document.getElementById("dayBtn").textContent=night?"☀️ Ban ngày":"🌙 Ban đêm";
-};
+canvas.addEventListener("pointerup",e=>{
+ if(!dragging)return;
+ dragging=false;
+ if(moved)return;
+
+ const p=worldPoint(e);
+ if(blocked(p.x,p.y))return;
+
+ const path=findPath(player.x,player.y,p.x,p.y);
+ if(path.length)player.path=path.slice(1);
+});
+
+function toggleNight(){
+ night=!night;
+}
+
+// TỰ ĐỘNG NGÀY VÀ ĐÊM
+function clock(){
+ const h=new Date().getHours();
+ night=h>=18||h<6;
+}
+clock();
+setInterval(clock,60000);
 </script>
 </body>
 </html>
