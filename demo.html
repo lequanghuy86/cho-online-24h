@@ -17,6 +17,25 @@ canvas{display:block;width:100%;height:100%}
 .hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
 background:#fffde5e8;color:#59402d;padding:10px 15px;
 border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
+#game{position:relative}
+.zoom{
+ position:absolute;
+ right:14px;
+ top:12px;
+ z-index:10;
+ display:flex;
+ gap:10px;
+}
+.zoom button{
+ width:44px;
+ height:44px;
+ border-radius:50%;
+ background:#fff8df;
+ color:#65452d;
+ font-size:25px;
+ box-shadow:0 2px 8px #0003;
+}
+
 </style>
 </head>
 <body>
@@ -24,7 +43,16 @@ border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
 <div class="brand">🏮 CHỢ ONLINE 24H</div>
 <button onclick="toggleNight()">🌞 / 🌙</button>
 </header>
+
+
+
+
 <div id="game">
+<div class="zoom">
+<button onclick="changeZoom(-0.15)">−</button>
+<button onclick="changeZoom(0.15)">＋</button>
+</div>
+
 <canvas id="world"></canvas>
 <div class="hint">👆 Chạm để di chuyển • Kéo để khám phá chợ</div>
 </div>
@@ -34,6 +62,15 @@ const ctx=canvas.getContext("2d");
 
 let W,H,dpr=1;
 let camX=0,camY=0,zoom=1;
+function changeZoom(delta){
+ const oldZoom=zoom;
+ zoom=Math.max(0.5,Math.min(2,zoom+delta));
+ const cx=W/2;
+ const cy=H/2;
+ camX=cx-(cx-camX)*(zoom/oldZoom);
+ camY=cy-(cy-camY)*(zoom/oldZoom);
+}
+
 let night=false;
 let lastTime=0;
 let dragging=false,moved=false;
