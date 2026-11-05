@@ -190,7 +190,59 @@ function ground(){
  ctx.fillStyle="#d9f5f3";
  ctx.beginPath();
  ctx.arc(900,660,8,0,Math.PI*2);
- ctx.fill();
+ ctx.fill();// ===== TRANG TRI KHU VUON CHO =====
+{
+  ctx.save();
+
+  // Bồn hoa hai bên khu chợ
+  for(let y=180;y<1250;y+=230){
+    for(let x of [75,1725]){
+      ctx.fillStyle="#76533b";
+      ctx.beginPath();
+      ctx.ellipse(x,y,55,25,0,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle="#477d43";
+      ctx.beginPath();
+      ctx.ellipse(x,y-5,49,20,0,0,Math.PI*2);
+      ctx.fill();
+
+      for(let i=0;i<7;i++){
+        let fx=x-35+i*12;
+        let fy=y-8+(i%2)*12;
+        ctx.fillStyle=["#ffcc55","#ff8ca8","#fff0d0"][i%3];
+        ctx.beginPath();
+        ctx.arc(fx,fy,5,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Hàng rào gỗ trang trí
+  for(let y=130;y<1300;y+=55){
+    for(let x of [35,1765]){
+      ctx.fillStyle="#805333";
+      ctx.fillRect(x-5,y,10,34);
+      ctx.fillStyle="#c69a61";
+      ctx.fillRect(x-9,y,18,5);
+    }
+  }
+
+  // Đèn trang trí
+  for(let y=250;y<1200;y+=300){
+    for(let x of [125,1675]){
+      ctx.fillStyle="#65452f";
+      ctx.fillRect(x-3,y,6,38);
+      ctx.fillStyle=night?"#ffe58a":"#f6d68a";
+      ctx.beginPath();
+      ctx.arc(x,y-5,10,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+// ===== HET TRANG TRI =====
 }
 
 function tree(x,y){
