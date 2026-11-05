@@ -64,7 +64,7 @@ let W,H,dpr=1;
 let camX=0,camY=0,zoom=1;
 function changeZoom(delta){
  const oldZoom=zoom;
- zoom=Math.max(0.5,Math.min(2,zoom+delta));
+ zoom=Math.max(0.2,Math.min(2,zoom+delta));
  const cx=W/2;
  const cy=H/2;
  camX=cx-(cx-camX)*(zoom/oldZoom);
