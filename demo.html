@@ -152,7 +152,7 @@ function isoTile(x,y,size,color){
 
 function ground(){
  ctx.fillStyle=night?"#344c3b":"#91bd7b";
- ctx.fillRect(0,0,1800,1400);
+ // ctx.fillRect(0,0,1800,1400);
 
  // Đường lát đá
  for(let y=100;y<1400;y+=65){
@@ -470,7 +470,11 @@ function draw(){
 if(marketBg.complete && marketBg.naturalWidth){
   ctx.drawImage(marketBg,0,0,1800,1400);
 }
-
+ground();
+trees.forEach(t=>tree(t.x,t.y));
+flowers.forEach(f=>flower(f));
+lamps.forEach(l=>lamp(l));
+shops.forEach(s=>shop(s));
  // Đường đi của nhân vật
  if(player.path.length){
   ctx.strokeStyle="#fff4a5";
