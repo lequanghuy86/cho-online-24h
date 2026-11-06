@@ -515,43 +515,140 @@ function loop(time){
 }
 requestAnimationFrame(loop);
 
-// ĐIỀU KHIỂN CẢM ỨNG
-function worldPoint(e){
- return {
-  x:(e.clientX-camX)/zoom,
-  y:(e.clientY-camY)/zoom
- };
+ 
+// ĐIỀU KHIỂN CẢM ỨNG: 1 NGÓN VÀ 2 NGÓN
+let gestureMode=null;
+let startX=0,startY=0,oldX=0,oldY=0;
+let moved=false;
+let pinchStartDistance=0;
+let pinchStartZoom=1;
+let pinchWorldX=0,pinchWorldY=0;
+
+function touchDistance(a,b){
+ return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 }
 
+canvas.addEventListener("touchstart",e=>{
+ e.preventDefault();
+
+ if(e.touches.length===1 && !gestureMode){
+  gestureMode="pan";
+  const t=e.touches[0];
+  startX=t.clientX;
+  startY=t.clientY;
+  oldX=camX;
+  oldY=camY;
+  moved=false;
+ }
+
+ if(e.touches.length>=2){
+  gestureMode="pinch";
+  moved=true;
+  const a=e.touches[0],b=e.touches[1];
+  pinchStartDistance=touchDistance(a,b);
+  pinchStartZoom=zoom;
+
+  const mx=(a.clientX+b.clientX)/2;
+  const my=(a.clientY+b.clientY)/2;
+  pinchWorldX=(mx-camX)/zoom;
+  pinchWorldY=(my-camY)/zoom;
+ }
+},{passive:false});
+
+canvas.addEventListener("touchmove",e=>{
+ e.preventDefault();
+
+ if(gestureMode==="pinch" && e.touches.length>=2){
+  const a=e.touches[0],b=e.touches[1];
+  const distance=touchDistance(a,b);
+  const mx=(a.clientX+b.clientX)/2;
+  const my=(a.clientY+b.clientY)/2;
+
+  zoom=Math.max(0.2,Math.min(2,
+   pinchStartZoom*distance/pinchStartDistance
+  ));
+
+  camX=mx-pinchWorldX*zoom;
+  camY=my-pinchWorldY*zoom;
+ }
+
+ else if(gestureMode==="pan" && e.touches.length===1){
+  const t=e.touches[0];
+  const dx=t.clientX-startX;
+  const dy=t.clientY-startY;
+
+  if(Math.hypot(dx,dy)>7)moved=true;
+
+  if(moved){
+   camX=oldX+dx;
+   camY=oldY+dy;
+  }
+ }
+},{passive:false});
+
+canvas.addEventListener("touchend",e=>{
+ e.preventDefault();
+
+ if(gestureMode==="pan" && !moved && e.changedTouches.length){
+  const t=e.changedTouches[0];
+  const p=worldPoint(t);
+
+  if(!blocked(p.x,p.y)){
+   const path=findPath(player.x,player.y,p.x,p.y);
+   if(path.length)player.path=path.slice(1);
+  }
+ }
+
+ if(e.touches.length===0){
+  gestureMode=null;
+ }
+},{passive:false});
+
+canvas.addEventListener("touchcancel",()=>{
+ gestureMode=null;
+});
+
+// Hỗ trợ chuột trên máy tính
+let mouseDragging=false;
+let mouseMoved=false;
+let mouseStartX=0,mouseStartY=0;
+let mouseOldX=0,mouseOldY=0;
+
 canvas.addEventListener("pointerdown",e=>{
- dragging=true;moved=false;
- startX=e.clientX;startY=e.clientY;
- oldX=camX;oldY=camY;
- canvas.setPointerCapture(e.pointerId);
+ if(e.pointerType==="touch")return;
+ mouseDragging=true;
+ mouseMoved=false;
+ mouseStartX=e.clientX;
+ mouseStartY=e.clientY;
+ mouseOldX=camX;
+ mouseOldY=camY;
 });
 
 canvas.addEventListener("pointermove",e=>{
- if(!dragging)return;
- const dx=e.clientX-startX;
- const dy=e.clientY-startY;
- if(Math.hypot(dx,dy)>7)moved=true;
- if(moved){
-  camX=oldX+dx;
-  camY=oldY+dy;
+ if(e.pointerType==="touch" || !mouseDragging)return;
+ const dx=e.clientX-mouseStartX;
+ const dy=e.clientY-mouseStartY;
+
+ if(Math.hypot(dx,dy)>7)mouseMoved=true;
+ if(mouseMoved){
+  camX=mouseOldX+dx;
+  camY=mouseOldY+dy;
  }
 });
 
 canvas.addEventListener("pointerup",e=>{
- if(!dragging)return;
- dragging=false;
- if(moved)return;
+ if(e.pointerType==="touch" || !mouseDragging)return;
+ mouseDragging=false;
 
- const p=worldPoint(e);
- if(blocked(p.x,p.y))return;
-
- const path=findPath(player.x,player.y,p.x,p.y);
- if(path.length)player.path=path.slice(1);
+ if(!mouseMoved){
+  const p=worldPoint(e);
+  if(!blocked(p.x,p.y)){
+   const path=findPath(player.x,player.y,p.x,p.y);
+   if(path.length)player.path=path.slice(1);
+  }
+ }
 });
+
 
 function toggleNight(){
  night=!night;
