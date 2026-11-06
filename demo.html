@@ -35,7 +35,28 @@ border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
  font-size:25px;
  box-shadow:0 2px 8px #0003;
 }
-
+.shop-panel{
+ position:absolute;
+ z-index:20;
+ left:50%;
+ top:50%;
+ transform:translate(-50%,-50%);
+ width:min(88%,360px);
+ background:#fff8e9;
+ color:#59402d;
+ border:3px solid #b98750;
+ border-radius:18px;
+ padding:20px;
+ box-shadow:0 8px 30px #0005;
+ display:none;
+ text-align:center;
+}
+.shop-panel h2{margin:0 0 12px}
+.shop-panel button{
+ background:#70452d;
+ color:white;
+ margin-top:12px;
+}
 </style>
 </head>
 <body>
@@ -52,7 +73,19 @@ border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
 <button onclick="changeZoom(-0.15)">−</button>
 <button onclick="changeZoom(0.15)">＋</button>
 </div>
+<div id="shopPanel" class="shop-panel">
+  <h2 id="shopTitle">Tên sạp hàng</h2>
 
+  <p id="shopDescription">
+    Chào mừng bạn đến với CHỢ ONLINE 24H!
+  </p>
+
+  <div id="shopProducts">
+    <p>Sản phẩm của sạp sẽ hiển thị tại đây.</p>
+  </div>
+
+  <button onclick="closeShop()">Đóng</button>
+</div>
 <canvas id="world"></canvas>
 <div class="hint">👆 Chạm để di chuyển • Kéo để khám phá chợ</div>
 </div>
@@ -524,7 +557,31 @@ function loop(time){
 }
 requestAnimationFrame(loop);
 
- 
+ // ===== THÔNG TIN SẠP HÀNG =====
+function openShop(s){
+  document.getElementById("shopTitle").textContent=
+    "SẠP "+s.id+" - "+s.name;
+
+  document.getElementById("shopDescription").textContent=
+    "Chào mừng bạn đến với "+s.name+"!";
+
+  document.getElementById("shopProducts").innerHTML=
+    "<p>Chưa có sản phẩm được đăng bán.</p>";
+
+  document.getElementById("shopPanel").style.display="block";
+}
+
+function closeShop(){
+  document.getElementById("shopPanel").style.display="none";
+}
+
+function findShopAt(p){
+  return shops.find(s=>
+    Math.abs(p.x-s.x)<85 &&
+    Math.abs(p.y-s.y)<75
+  );
+}
+// ===== HẾT THÔNG TIN SẠP =====
 // ĐIỀU KHIỂN CẢM ỨNG: 1 NGÓN VÀ 2 NGÓN
 let gestureMode=null;
 
