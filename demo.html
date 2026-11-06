@@ -259,34 +259,7 @@ function tree(x,y){
 function shop(s){
  const x=s.x,y=s.y;
 
- // Bóng sạp
- ctx.fillStyle="#00000022";
- ctx.fillRect(x-65,y-3,135,15);
-
- // Thân sạp
- ctx.fillStyle="#a66c40";
- ctx.fillRect(x-57,y-58,114,70);
-
- ctx.strokeStyle="#74472c";
- ctx.lineWidth=4;
- ctx.strokeRect(x-57,y-58,114,70);
-
- // Mái ngói
- ctx.fillStyle="#9d4937";
- ctx.beginPath();
- ctx.moveTo(x-75,y-58);
- ctx.lineTo(x,y-108);
- ctx.lineTo(x+75,y-58);
- ctx.closePath();
- ctx.fill();
-
- ctx.strokeStyle="#713b30";
- ctx.lineWidth=4;
- ctx.stroke();
-
- // Viền mái
- ctx.fillStyle="#c86c4c";
- ctx.fillRect(x-73,y-61,146,9);
+ 
 
 // Bảng tên trên đỉnh mái sạp
 const name=s.name || "";
