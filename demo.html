@@ -288,18 +288,21 @@ function shop(s){
  ctx.fillStyle="#c86c4c";
  ctx.fillRect(x-73,y-61,146,9);
 
- // Cửa sạp
- ctx.fillStyle="#f0d19a";
- ctx.fillRect(x-38,y-48,76,36);
+// Bảng tên trên đỉnh mái sạp
+const name=s.name || "";
+ctx.font="bold 10px Arial";
+ctx.textAlign="center";
 
- // Bảng hiệu
- ctx.fillStyle="#70452d";
- ctx.fillRect(x-56,y-91,112,23);
+const w=Math.max(48,ctx.measureText(name).width+14);
+const tagY=y-137;
 
- ctx.fillStyle="#fff2c4";
- ctx.font="bold 11px Arial";
- ctx.textAlign="center";
- ctx.fillText(s.name,x,y-76);
+ctx.fillStyle="#70452d";
+ctx.beginPath();
+ctx.roundRect(x-w/2,tagY,w,19,5);
+ctx.fill();
+
+ctx.fillStyle="#fff2c4";
+ctx.fillText(name,x,tagY+13);
 
  // Số sạp
  ctx.fillStyle="#fff";
