@@ -669,7 +669,12 @@ canvas.addEventListener("touchend",e=>{
  if(gestureMode==="pan" && !moved && e.changedTouches.length){
   const t=e.changedTouches[0];
   const p=worldPoint(t);
-
+const selectedShop=findShopAt(p);
+if(selectedShop){
+ openShop(selectedShop);
+ player.path=[];
+ return;
+}
   if(!blocked(p.x,p.y)){
    const path=findPath(player.x,player.y,p.x,p.y);
    if(path.length)player.path=path.slice(1);
