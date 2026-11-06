@@ -61,7 +61,7 @@ const canvas=document.getElementById("world");
 const ctx=canvas.getContext("2d");
 
 let W,H,dpr=1;
-let camX=0,camY=0,zoom=1;
+let camX=0,camY=0,zoom=1.1;
 function changeZoom(delta){
  const oldZoom=zoom;
  zoom=Math.max(0.2,Math.min(2,zoom+delta));
@@ -88,8 +88,8 @@ function resize(){
  W=canvas.clientWidth;H=canvas.clientHeight;
  dpr=Math.min(devicePixelRatio||1,2);
  canvas.width=W*dpr;canvas.height=H*dpr;
- camX=W/2-900;
- camY=H/2-680;
+ camX=W/2-900*zoom;
+ camY=H/2-680*zoom;
 }
 window.addEventListener("resize",resize);
 resize();
