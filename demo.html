@@ -726,6 +726,7 @@ const selectedShop=findShopAt(p);
 if(selectedShop){
  openShop(selectedShop);
  player.path=[];
+gestureMode=null;   
  return;
 }
   if(!blocked(p.x,p.y)){
