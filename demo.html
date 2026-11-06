@@ -524,7 +524,14 @@ let pinchStartDistance=0;
 let pinchStartZoom=1;
 let pinchWorldX=0,pinchWorldY=0;
 
-function touchDistance(a,b){
+function touchDistance(a,b){// Chuyển tọa độ màn hình thành tọa độ trong khu chợ
+function worldPoint(e){
+ const rect=canvas.getBoundingClientRect();
+ return {
+  x:(e.clientX-rect.left-camX)/zoom,
+  y:(e.clientY-rect.top-camY)/zoom
+ };
+}
  return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 }
 
