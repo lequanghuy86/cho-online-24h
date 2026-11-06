@@ -333,7 +333,49 @@ function lamp(l){
   ctx.fill();
  }
 }
+// 20 NGƯỜI MUA TỰ ĐI LẠI TRONG CHỢ
+const buyers = Array.from({length:20},(_,i)=>({
+ x:150+Math.random()*1500,
+ y:180+Math.random()*1050,
+ tx:150+Math.random()*1500,
+ ty:180+Math.random()*1050,
+ speed:0.25+Math.random()*0.35,
+ color:["#ff6b6b","#4dabf7","#ffd43b","#69db7c","#da77f2"][i%5]
+}));
 
+function drawBuyers(){
+ buyers.forEach(b=>{
+   const dx=b.tx-b.x;
+   const dy=b.ty-b.y;
+   const distance=Math.hypot(dx,dy);
+
+   if(distance<3){
+     b.tx=150+Math.random()*1500;
+     b.ty=180+Math.random()*1050;
+   }else{
+     b.x+=dx/distance*b.speed;
+     b.y+=dy/distance*b.speed;
+   }
+
+   ctx.fillStyle="#00000033";
+   ctx.beginPath();
+   ctx.ellipse(b.x,b.y+9,7,3,0,0,Math.PI*2);
+   ctx.fill();
+
+   ctx.fillStyle=b.color;
+   ctx.fillRect(b.x-5,b.y-1,10,10);
+
+   ctx.fillStyle="#ffd6b0";
+   ctx.beginPath();
+   ctx.arc(b.x,b.y-5,5,0,Math.PI*2);
+   ctx.fill();
+
+   ctx.fillStyle="#49352d";
+   ctx.beginPath();
+   ctx.arc(b.x,b.y-7,5,Math.PI,Math.PI*2);
+   ctx.fill();
+ });
+}
 function avatar(){
  const x=player.x,y=player.y;
  const walking=player.path.length>0;
@@ -470,6 +512,7 @@ flowers.forEach(f=>flower(f));
 lamps.forEach(l=>lamp(l));
 shops.forEach(s=>shop(s));
  // Đường đi của nhân vật
+ drawBuyers();
  if(player.path.length){
   ctx.strokeStyle="#fff4a5";
   ctx.lineWidth=3;
