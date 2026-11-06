@@ -59,7 +59,8 @@ border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
 <script>
 const canvas=document.getElementById("world");
 const ctx=canvas.getContext("2d");
-
+const marketBg=new Image();
+marketBg.src="cho-online-24h.jpg";
 let W,H,dpr=1;
 let camX=0,camY=0,zoom=1.1;
 function changeZoom(delta){
@@ -465,15 +466,10 @@ function draw(){
  ctx.translate(camX,camY);
  ctx.scale(zoom,zoom);
 
- ground();
-
- trees.forEach(t=>tree(t.x,t.y));
-
- flowers.forEach(f=>flower(f));
-
- lamps.forEach(l=>lamp(l));
-
- shops.forEach(s=>shop(s));
+ // HÌNH NỀN KHU CHỢ
+if(marketBg.complete && marketBg.naturalWidth){
+  ctx.drawImage(marketBg,0,0,1800,1400);
+}
 
  // Đường đi của nhân vật
  if(player.path.length){
