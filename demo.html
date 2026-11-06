@@ -76,14 +76,27 @@ border-radius:20px;font-size:12px;white-space:nowrap;pointer-events:none}
 <div id="shopPanel" class="shop-panel">
   <h2 id="shopTitle">Tên sạp hàng</h2>
 
-  <p id="shopDescription">
-    Chào mừng bạn đến với CHỢ ONLINE 24H!
-  </p>
+  <p>Nhập tên sạp của bạn:</p>
+  <input
+    id="shopNameInput"
+    type="text"
+    placeholder="Ví dụ: Rau sạch nhà Huy"
+    style="width:90%;padding:12px;border:1px solid #b98750;border-radius:8px;font-size:16px;"
+  >
+
+  <p>Giới thiệu về sạp:</p>
+  <textarea
+    id="shopDescriptionInput"
+    placeholder="Viết vài dòng giới thiệu sạp hàng..."
+    rows="3"
+    style="width:90%;padding:12px;border:1px solid #b98750;border-radius:8px;font-size:16px;"
+  ></textarea>
 
   <div id="shopProducts">
     <p>Sản phẩm của sạp sẽ hiển thị tại đây.</p>
   </div>
 
+  <button onclick="saveShop()">Lưu thông tin</button>
   <button onclick="closeShop()">Đóng</button>
 </div>
 <canvas id="world"></canvas>
@@ -558,17 +571,55 @@ function loop(time){
 requestAnimationFrame(loop);
 
  // ===== THÔNG TIN SẠP HÀNG =====
+// ===== THÔNG TIN SẠP HÀNG =====
 function openShop(s){
-  document.getElementById("shopTitle").textContent=
-    "SẠP "+s.id+" - "+s.name;
+  const saved=JSON.parse(
+    localStorage.getItem("shop_"+s.id)||"{}"
+  );
 
-  document.getElementById("shopDescription").textContent=
-    "Chào mừng bạn đến với "+s.name+"!";
+  document.getElementById("shopTitle").textContent=
+    saved.name||("SẠP "+s.id+" - "+s.name);
+
+  document.getElementById("shopNameInput").value=
+    saved.name||s.name;
+
+  document.getElementById("shopDescriptionInput").value=
+    saved.description||"";
 
   document.getElementById("shopProducts").innerHTML=
     "<p>Chưa có sản phẩm được đăng bán.</p>";
 
   document.getElementById("shopPanel").style.display="block";
+}
+
+function saveShop(){
+  const name=document.getElementById("shopNameInput").value.trim();
+  const description=document.getElementById("shopDescriptionInput").value.trim();
+
+  if(!name){
+    alert("Bạn hãy nhập tên sạp!");
+    return;
+  }
+
+  const currentTitle=document.getElementById("shopTitle").textContent;
+  const shopId=currentTitle.match(/SẠP\s+(\d+)/);
+
+  if(!shopId){
+    alert("Không xác định được sạp hàng!");
+    return;
+  }
+
+  const data={
+    name:name,
+    description:description
+  };
+
+  localStorage.setItem("shop_"+shopId[1],JSON.stringify(data));
+
+  document.getElementById("shopTitle").textContent=
+    "SẠP "+shopId[1]+" - "+name;
+
+  alert("Đã lưu thông tin sạp!");
 }
 
 function closeShop(){
@@ -582,6 +633,8 @@ function findShopAt(p){
   );
 }
 // ===== HẾT THÔNG TIN SẠP =====
+
+
 // ĐIỀU KHIỂN CẢM ỨNG: 1 NGÓN VÀ 2 NGÓN
 let gestureMode=null;
 
